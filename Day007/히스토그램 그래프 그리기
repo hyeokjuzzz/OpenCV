@@ -1,0 +1,68 @@
+using OpenCvSharp;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO.IsolatedStorage;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace _6._3._5
+{
+    internal class Program
+    {
+
+        static public void calc_Histo(Mat image, Mat hist, int bins, int range_max = 256)
+        {
+            int[] histSize = { bins };
+            float[] range = { 0, (float)range_max };
+            int[] channels = { 0 };
+
+            Cv2.CalcHist(new Mat[] { image }, new int[] { 0 }, null, hist, 1, histSize, new float[][] { range });
+        }
+
+        static void draw_Histo(Mat hist, ref Mat histImg, Size size)
+        {
+            histImg = new Mat(size, MatType.CV_8U, new Scalar(255));
+            float bin = (float)histImg.Cols / hist.Rows;
+            Cv2.Normalize(hist, hist, 0, histImg.Rows, NormTypes.MinMax);
+
+            for (int i = 0; i < hist.Rows; i++)
+            {
+                float start_x = i * bin;
+                float end_x = (i + 1) * bin;
+                Point pt1 = new Point((int)start_x, 0);
+                Point pt2 = new Point((int)end_x, (int)hist.At<float>(i));
+                if (pt2.Y > 0)
+                {
+                    Cv2.Rectangle(histImg, pt1, pt2, Scalar.All(0), -1);
+                }
+            }
+
+            Cv2.Flip(histImg, histImg, FlipMode.X);
+        }
+
+        static void Main(string[] args)
+        {
+            // 예제 사용법
+            Mat image = new Mat("C:\\Temp\\image\\histo_test.jpg", ImreadModes.Grayscale);
+
+            // 히스토그램 계산
+            Mat hist = new Mat();
+            int bins = 256;
+            calc_Histo(image, hist, bins);
+
+            // 히스토그램 그리기
+            Mat hist_img = new Mat();
+            Size size = new Size(256, 200); // 필수로 지정
+            draw_Histo(hist, ref hist_img, size);
+
+            // 이미지와 히스토그램 이미지 표시
+            Cv2.ImShow("image", image);
+            Cv2.ImShow("hist_img", hist_img);
+
+            // 키 입력을 대기
+            Cv2.WaitKey(0);
+        }
+    }
+}
